@@ -1,0 +1,26 @@
+--cpu Cortex-M3
+"airquality\startup_stm32f103xb.o"
+"airquality\main.o"
+"airquality\stm32f1xx_it.o"
+"airquality\stm32f1xx_hal_msp.o"
+"airquality\stm32f1xx_hal_gpio_ex.o"
+"airquality\stm32f1xx_hal_adc.o"
+"airquality\stm32f1xx_hal_adc_ex.o"
+"airquality\stm32f1xx_hal.o"
+"airquality\stm32f1xx_hal_rcc.o"
+"airquality\stm32f1xx_hal_rcc_ex.o"
+"airquality\stm32f1xx_hal_gpio.o"
+"airquality\stm32f1xx_hal_dma.o"
+"airquality\stm32f1xx_hal_cortex.o"
+"airquality\stm32f1xx_hal_pwr.o"
+"airquality\stm32f1xx_hal_flash.o"
+"airquality\stm32f1xx_hal_flash_ex.o"
+"airquality\stm32f1xx_hal_exti.o"
+"airquality\stm32f1xx_hal_tim.o"
+"airquality\stm32f1xx_hal_tim_ex.o"
+"airquality\stm32f1xx_hal_uart.o"
+"airquality\system_stm32f1xx.o"
+--strict --scatter "AirQuality\AirQuality.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "AirQuality.map" -o AirQuality\AirQuality.axf
