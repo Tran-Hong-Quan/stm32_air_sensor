@@ -48,6 +48,9 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 uint8_t rxBuffer[16] = "";
+uint16_t fanPWM;
+uint16_t coThreshold;
+uint16_t dustThreshold;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -155,7 +158,7 @@ int main(void)
 		
 		//Drive LED for GP2Y
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
-		delay_us(1000);
+		delay_us(280);
 		
 		//Get analog value of MQ135
 		adc_value_1 = ADC_GetValue(ADC_CHANNEL_1);
@@ -164,6 +167,7 @@ int main(void)
 		
 		//Turn off LED for GP2Y
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
+		delay_us(40);
 		
 		//Check sensor value to turn on fan
 		if(isGas == 0 || adc_value_1 >= coThreshold || adc_value_2 >= dustThreshold){
@@ -176,9 +180,9 @@ int main(void)
 		}
 		
 		//Make msg(message) from variables
-		sprintf((char *)msg,"%d %d %d\n\t",isGas,adc_value_1,adc_value_2);
+		sprintf((char *)msg,"%d %d\n\r",adc_value_1,adc_value_2);
 		//Send string by using UART
-		HAL_UART_Transmit(&huart1,msg,sizeof(msg),HAL_MAX_DELAY);
+		HAL_UART_Transmit(&huart1,msg,sizeof(msg),10);
 		
 		HAL_Delay(1000);
   }
