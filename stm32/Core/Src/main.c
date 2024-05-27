@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,7 +48,7 @@ TIM_HandleTypeDef htim4;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-uint8_t rxBuffer[16] = "";
+uint8_t rxBuffer[14] = "";
 uint16_t fanPWM;
 uint16_t coThreshold;
 uint16_t dustThreshold;
@@ -85,17 +86,6 @@ uint16_t ADC_GetValue(uint32_t channel){
 		return res;
 }
 
-//Update new threshold and fan speed by using UART
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-		if(huart->Instance == huart1.Instance){
-				//Get string
-				HAL_UART_Receive(huart,rxBuffer,sizeof(rxBuffer),HAL_MAX_DELAY);
-				
-				//Get data from string
-				sscanf((char*)rxBuffer,"%d %d %d\n\r",
-						(int*)&fanPWM,(int*)&coThreshold,(int*)&dustThreshold);
-		}
-}
 
 /* USER CODE END 0 */
 
@@ -180,10 +170,10 @@ int main(void)
 		}
 		
 		//Make msg(message) from variables
-		sprintf((char *)msg,"%d %d\n\r",adc_value_1,adc_value_2);
+		sprintf((char *)msg,"%d %d %d", isGas, adc_value_1,adc_value_2);
 		//Send string by using UART
 		HAL_UART_Transmit(&huart1,msg,sizeof(msg),10);
-		
+
 		HAL_Delay(1000);
   }
   /* USER CODE END 3 */
@@ -488,10 +478,24 @@ static void MX_GPIO_Init(void)
 //		}
 //	}
 //}
+//Delay for drive LED dust sensor
 void delay_us(uint16_t au16_us)
 {
     htim4.Instance->CNT = 0;
     while (htim4.Instance->CNT < au16_us);
+}
+
+
+//Update new threshold and fan speed by using UART
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+		if(huart->Instance == USART1){
+				//Get string
+				HAL_UART_Receive_IT(&huart1,rxBuffer,sizeof(rxBuffer));
+			
+				//Get data from string
+				sscanf((char *)rxBuffer,"%d %d %d",
+						(int*)&fanPWM,(int*)&coThreshold,(int*)&dustThreshold);
+		}
 }
 /* USER CODE END 4 */
 
