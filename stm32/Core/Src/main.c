@@ -56,7 +56,7 @@ uint16_t fanPWM = 49;
 uint16_t door = 25;
 uint16_t buzz = 200;
 uint16_t coThreshold=2000;
-uint16_t dustThreshold=200;
+uint16_t dustThreshold=600;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -173,16 +173,17 @@ int main(void)
 		
 		//Check sensor value to turn on fan
 		//If having Gas, open door, turn on buzz, and fan
-		if(isGas == 0){
+		if(isGas == 0 || adc_value_1 >= coThreshold ){
 				//On fan, open door, turn on buzz
 				__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_4,fanPWM);
 				__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,door);
 				__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_2,buzz);
 		}
 		//If dust is too high, turn on fan and open windown
-		else if (adc_value_1 >= coThreshold || adc_value_2 >= dustThreshold) {
+		else if (adc_value_2 <dustThreshold) {
 				__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_4,fanPWM);
 				__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,door);
+				__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_2,0);
 		}
 		//IF nothing pass threshold and no gas, turn off all
 		else{
