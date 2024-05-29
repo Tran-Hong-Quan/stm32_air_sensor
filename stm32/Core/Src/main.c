@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include "string.h"
+#include <math.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,11 +52,11 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 uint8_t rxBuffer[14] = "";
 uint8_t test[] = "Hello";
-uint16_t fanPWM = 100;
+uint16_t fanPWM = 49;
 uint16_t door = 25;
 uint16_t buzz = 200;
-uint16_t coThreshold;
-uint16_t dustThreshold;
+uint16_t coThreshold=2000;
+uint16_t dustThreshold=600;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -162,30 +163,42 @@ int main(void)
 		//Get analog value of GP2Y1010AU0F Dust sensor
 		adc_value_2 = ADC_GetValue(ADC_CHANNEL_2);
 		
+		double airQualityLevel = 116.0602082 * pow((4096.0/adc_value_1*5-1)*10.0/76.63,-2.7769034857);
+		double dustLevel = -0.0786*adc_value_2 + 75.71;
+		if(dustLevel < 0) dustLevel = 0;
+		
 		//Turn off LED for GP2Y
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
 		delay_us(40);
 		
 		//Check sensor value to turn on fan
-		if(isGas == 1){
+		//If having Gas, open door, turn on buzz, and fan
+		if(isGas == 0 || adc_value_1 >= coThreshold ){
 				//On fan, open door, turn on buzz
 				__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_4,fanPWM);
 				__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,door);
 				__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_2,buzz);
 		}
-		else if (adc_value_1 >= coThreshold || adc_value_2 >= dustThreshold) {
+		//If dust is too high, turn on fan and open windown
+		else if (adc_value_2 <dustThreshold) {
 				__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_4,fanPWM);
 				__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,door);
+				__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_2,0);
 		}
+		//IF nothing pass threshold and no gas, turn off all
 		else{
 				//Off fan
 				__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_4,0);
 				__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,10);
 				__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_2,0);
 		}
+<<<<<<< HEAD
+=======
+
+>>>>>>> c75726906f0539753fd0a16218c1b5d93e827059
 		
 		//Make msg(message) from variables
-		sprintf((char *)msg,"%d %d %d", isGas, adc_value_1,adc_value_2);
+		sprintf((char *)msg,"%d %d %d", isGas, (int)airQualityLevel,(int)dustLevel);
 		//Send string by using UART
 		HAL_UART_Transmit(&huart1,msg,sizeof(msg),10);
 
