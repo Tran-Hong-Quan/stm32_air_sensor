@@ -61,9 +61,8 @@ static void MX_ADC1_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM4_Init(void);
-void delay_us(uint16_t au16_us);
 /* USER CODE BEGIN PFP */
-
+void delay_us(uint16_t au16_us);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
