@@ -184,10 +184,6 @@ int main(void)
 				__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_2,0);
 		}
 		
-		if (fanPWM == 10) {
-			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
-		}
-		
 		//Make msg(message) from variables
 		sprintf((char *)msg,"%d %d %d", isGas, adc_value_1,adc_value_2);
 		//Send string by using UART
