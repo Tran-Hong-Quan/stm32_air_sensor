@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include "string.h"
 #include <math.h>
+#include "i2c-lcd.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,6 +44,8 @@
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 
+I2C_HandleTypeDef hi2c1;
+
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim4;
@@ -51,12 +54,13 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 uint8_t rxBuffer[14] = "";
-uint8_t test[] = "Hello";
 uint16_t fanPWM = 49;
-uint16_t door = 25;
+uint16_t door = 10;
 uint16_t buzz = 200;
 uint16_t coThreshold=2000;
 uint16_t dustThreshold=600;
+char bui[20];
+char co2[20];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -67,6 +71,7 @@ static void MX_USART1_UART_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 void delay_us(uint16_t delay);
 /* USER CODE END PFP */
@@ -90,7 +95,6 @@ uint16_t ADC_GetValue(uint32_t channel){
 		HAL_ADC_Stop(&hadc1);
 		return res;
 }
-
 
 /* USER CODE END 0 */
 
@@ -128,6 +132,8 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM4_Init();
   MX_TIM2_Init();
+  MX_I2C1_Init();
+	lcd_init();
   /* USER CODE BEGIN 2 */
 	HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_4);
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
@@ -142,6 +148,13 @@ int main(void)
 	uint16_t adc_value_2;
 	GPIO_PinState isGas;
 	uint8_t msg[32] = "";
+	
+	lcd_goto_XY(1, 0);
+	lcd_send_string("PPM Bui: ");
+	HAL_Delay(50);
+	lcd_goto_XY(2, 0);
+	lcd_send_string("PPM CO2: ");
+	HAL_Delay(50);
 	
   while (1)
   {
@@ -167,13 +180,22 @@ int main(void)
 		double dustLevel = -0.0786*adc_value_2 + 75.71;
 		if(dustLevel < 0) dustLevel = 0;
 		
+		sprintf(bui, "%.1f", dustLevel);
+		lcd_goto_XY(1, 10);
+		lcd_send_string(bui);
+		HAL_Delay(50);
+		
+		sprintf(co2, "%.1f", airQualityLevel);
+		lcd_goto_XY(2, 10);
+		lcd_send_string(co2);
+		
 		//Turn off LED for GP2Y
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
 		delay_us(40);
 		
 		//Check sensor value to turn on fan
 		//If having Gas, open door, turn on buzz, and fan
-		if(isGas == 0 || adc_value_1 >= coThreshold ){
+		if(isGas == 0 || airQualityLevel >= coThreshold ){
 				//On fan, open door, turn on buzz
 				__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_4,fanPWM);
 				__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,door);
@@ -189,10 +211,9 @@ int main(void)
 		else{
 				//Off fan
 				__HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_4,0);
-				__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,10);
+				__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_1,20);
 				__HAL_TIM_SET_COMPARE(&htim2,TIM_CHANNEL_2,0);
 		}
-
 		
 		//Make msg(message) from variables
 		sprintf((char *)msg,"%d %d %d", isGas, (int)airQualityLevel,(int)dustLevel);
@@ -291,6 +312,40 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
+
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
 
 }
 
