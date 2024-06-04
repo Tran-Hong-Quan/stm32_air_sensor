@@ -177,7 +177,7 @@ int main(void)
 		adc_value_2 = ADC_GetValue(ADC_CHANNEL_2);
 		
 		double airQualityLevel = 116.0602082 * pow((4096.0/adc_value_1*5-1)*10.0/76.63,-2.7769034857);
-		double dustLevel = -0.0786*adc_value_2 + 75.71;
+		double dustLevel = adc_value_2 / 4095.0 * 3.3 / 6.0 - 0.6;
 		if(dustLevel < 0) dustLevel = 0;
 		
 		sprintf(bui, "%.1f", dustLevel);
